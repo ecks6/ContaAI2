@@ -1,1 +1,12 @@
-{"code":"rate-limited","message":"You have hit the rate limit. Please upgrade to keep chatting.","providerLimitHit":false,"isRetryable":true}
+import React from 'react';
+
+function App() {
+  return (
+    <div className="App">
+      <h1>Welcome to ContaAI</h1>
+      {/* Your application content will go here */}
+    </div>
+  );
+}
+
+export default App;
