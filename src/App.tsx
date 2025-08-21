@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthPage } from './components/Auth/AuthPage';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { FileUpload } from './components/FileUpload';
@@ -12,12 +14,13 @@ import { ReportsManager } from './components/ReportsManager';
 import { SettingsManager } from './components/SettingsManager';
 import { ChatBot } from './components/ChatBot';
 import { DateFilter } from './components/DateFilter';
-import { useDocuments } from './hooks/useDocuments';
+import { useDocumentsDB } from './hooks/useDocumentsDB';
 import { useContracts } from './hooks/useContracts';
 import { useAccounting } from './hooks/useAccounting';
 import { useBankReconciliation } from './hooks/useBankReconciliation';
 
-function App() {
+function AppContent() {
+  const { isAuthenticated, isLoading, user, company } = useAuth();
   const [activeView, setActiveView] = useState('dashboard');
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
@@ -26,7 +29,7 @@ function App() {
   const [sortBy, setSortBy] = useState('newest');
 
   // Custom hooks
-  const { documents, transactions, isProcessing, processDocument } = useDocuments();
+  const { documents, transactions, isProcessing, processDocument } = useDocumentsDB();
   const { contracts, isProcessing: isProcessingContract, processContract } = useContracts();
   const { 
     clients, 
@@ -94,6 +97,21 @@ function App() {
   // Calculate totals
   const totalRevenue = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
   const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Se încarcă ContaAI...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AuthPage />;
+  }
 
   const renderContent = () => {
     switch (activeView) {
@@ -328,9 +346,17 @@ function App() {
         transactions={transactions}
         totalRevenue={totalRevenue}
         totalExpenses={totalExpenses}
-        companyName={companySettings.name || 'Compania Ta'}
+        companyName={company?.name || companySettings.name || 'Compania Ta'}
       />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
